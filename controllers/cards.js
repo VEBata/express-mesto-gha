@@ -1,7 +1,7 @@
 const cardModel = require('../models/card');
-const forBidden = require('../utils');
-const notFoundCode = require('../utils');
-const serverError = require('../utils');
+const { forBidden } = require('../utils');
+const { notFoundCode } = require('../utils');
+const { serverError } = require('../utils');
 
 const getCards = (req, res) => {
   cardModel.find({})
