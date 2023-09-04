@@ -1,7 +1,7 @@
 const userModel = require('../models/user');
-const {forBidden} = require('../utils');
-const {notFoundCode} = require('../utils');
-const {serverError} = require('../utils');
+const forBidden = require('../utils');
+const notFoundCode = require('../utils');
+const serverError = require('../utils');
 
 const getUsers = (req, res) => {
   userModel.find({})
