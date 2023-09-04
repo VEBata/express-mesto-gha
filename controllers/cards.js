@@ -1,6 +1,6 @@
 const cardModel = require('../models/card');
 const {forBidden} = require('../utils');
-const {notFound} = require('../utils');
+const {notFoundCode} = require('../utils');
 const {serverError} = require('../utils');
 
 const getCards = (req, res) => {
@@ -39,7 +39,7 @@ const deleteCard = (req, res) => {
         res.status(forBidden).send({ message: 'Ошибка в id карты' });
         return;
       } if (err.message === 'NotValidId') {
-        res.status(notFound).send({ message: 'Карточки нет в базе' });
+        res.status(notFoundCode).send({ message: 'Карточки нет в базе' });
         return;
       }
       res.status(serverError).send({ message: 'На сервере произошла ошибка' });
@@ -61,7 +61,7 @@ const putLike = (req, res) => {
         res.status(forBidden).send({ message: 'Ошибка в id карты' });
         return;
       } if (err.message === 'NotValidId') {
-        res.status(notFound).send({ message: 'Карточки нет в базе' });
+        res.status(notFoundCode).send({ message: 'Карточки нет в базе' });
         return;
       }
       res.status(serverError).send({ message: 'На сервере произошла ошибка' });
@@ -83,7 +83,7 @@ const deleteLike = (req, res) => {
         res.status(forBidden).send({ message: 'Ошибка в id карты' });
         return;
       } if (err.message === 'NotValidId') {
-        res.status(notFound).send({ message: 'Карточки нет в базе' });
+        res.status(notFoundCode).send({ message: 'Карточки нет в базе' });
         return;
       }
       res.status(serverError).send({ message: 'На сервере произошла ошибка' });
