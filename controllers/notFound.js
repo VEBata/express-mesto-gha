@@ -1,5 +1,5 @@
 const notFound = (req, res) => {
-  res.status(404).send({ message: 'Запрашиваемая страница не существует' });
+  res.status(notFoundCode).send({ message: 'Запрашиваемая страница не существует' });
 };
 
 module.exports = { notFound };

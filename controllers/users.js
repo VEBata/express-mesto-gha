@@ -6,7 +6,7 @@ const getUsers = (req, res) => {
       res.status(200).send(users);
     })
     .catch(() => {
-      res.status(500).send({ message: 'На сервере произошла ошибка' });
+      res.status(serverError).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -18,13 +18,13 @@ const getUserById = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Переданы некорректные данные пользователя' });
+        res.status(forBidden).send({ message: 'Переданы некорректные данные пользователя' });
         return;
       } if (err.message === 'NotValidId') {
-        res.status(404).send({ message: 'Пользователь не найден' });
+        res.status(notFoundCode).send({ message: 'Пользователь не найден' });
         return;
       }
-      res.status(500).send({ message: 'На сервере произошла ошибка' });
+      res.status(serverError).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -36,10 +36,10 @@ const createUser = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: ' Переданы некорректные данные пользователя' });
+        res.status(forBidden).send({ message: ' Переданы некорректные данные пользователя' });
         return;
       }
-      res.status(500).send({ message: 'На сервере произошла ошибка' });
+      res.status(serverError).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -52,13 +52,13 @@ const updateUserById = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные пользователя' });
+        res.status(forBidden).send({ message: 'Переданы некорректные данные пользователя' });
         return;
       } if (err.message === 'NotValidId') {
-        res.status(404).send({ message: 'Пользователь не найден' });
+        res.status(notFoundCode).send({ message: 'Пользователь не найден' });
         return;
       }
-      res.status(500).send({ message: 'На сервере произошла ошибка' });
+      res.status(serverError).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -71,13 +71,13 @@ const updateAvatarById = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: ' Переданы некорректные данные пользователя' });
+        res.status(forBidden).send({ message: ' Переданы некорректные данные пользователя' });
         return;
       } if (err.message === 'NotValidId') {
-        res.status(404).send({ message: 'Пользователь не найден' });
+        res.status(notFoundCode).send({ message: 'Пользователь не найден' });
         return;
       }
-      res.status(500).send({ message: 'На сервере произошла ошибка' });
+      res.status(serverError).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
