@@ -3,10 +3,10 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
 const { userData } = require('../utils/userData');
-const { BadRequestError } = require('../errors/badRequestError'); // 400
-const { UnauthorizedError } = require('../errors/unauthorizedError'); // 401
-const { NotFoundError } = require('../errors/notFoundError'); // 404
-const { ConflictError } = require('../errors/conflictError'); // 409
+const { BadRequestError } = require('../errors/badRequestError');
+const { UnauthorizedError } = require('../errors/unauthorizedError');
+const { NotFoundError } = require('../errors/notFoundError');
+const { ConflictError } = require('../errors/conflictError');
 
 const JWT_SECRET = 'most-secret-key';
 

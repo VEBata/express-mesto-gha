@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const cardModel = require('../models/card');
-const { BadRequestError } = require('../errors/badRequestError'); // 400
-const { ForbiddenError } = require('../errors/forbiddenError'); // 403
-const { NotFoundError } = require('../errors/notFoundError'); // 404
+const { BadRequestError } = require('../errors/badRequestError');
+const { ForbiddenError } = require('../errors/forbiddenError');
+const { NotFoundError } = require('../errors/notFoundError');
 
 const getCards = (req, res, next) => {
   cardModel.find({})
