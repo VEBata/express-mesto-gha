@@ -1,87 +1,139 @@
+const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
-const { forBidden } = require('../utils');
-const { notFoundCode } = require('../utils');
-const { serverError } = require('../utils');
+const { userData } = require('../utils/userData');
+const { BadRequestError } = require('../errors/badRequestError'); // 400
+const { UnauthorizedError } = require('../errors/unauthorizedError'); // 401
+const { NotFoundError } = require('../errors/notFoundError'); // 404
+const { ConflictError } = require('../errors/conflictError'); // 409
 
-const getUsers = (req, res) => {
+const JWT_SECRET = 'most-secret-key';
+
+const getUsers = (req, res, next) => {
   userModel.find({})
     .then((users) => {
-      res.status(200).send(users);
+      res.status(200).send({ data: users.map((user) => userData(user)) });
     })
-    .catch(() => {
-      res.status(serverError).send({ message: 'На сервере произошла ошибка' });
-    });
+    .catch(next);
 };
 
-const getUserById = (req, res) => {
+const getUserById = (req, res, next) => {
   userModel.findById(req.params.id)
-    .orFail(new Error('NotValidId'))
+    .orFail()
     .then((user) => {
-      res.status(200).send(user);
+      res.status(200).send({ data: userData(user) });
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(forBidden).send({ message: 'Переданы некорректные данные пользователя' });
+      if (err instanceof mongoose.Error.CastError) {
+        next(new BadRequestError('Переданы некорректные данные пользователя'));
         return;
-      } if (err.message === 'NotValidId') {
-        res.status(notFoundCode).send({ message: 'Пользователь не найден' });
+      } if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Пользователь не найден'));
         return;
       }
-      res.status(serverError).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
-const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  userModel.create({ name, about, avatar })
+const createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  bcrypt.hash(password, 10)
+    .then((hash) => userModel.create({
+      name, about, avatar, email, password: hash,
+    }))
     .then((user) => {
-      res.status(201).send(user);
+      res.status(201).send({ data: userData(user) });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(forBidden).send({ message: ' Переданы некорректные данные пользователя' });
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new BadRequestError('Переданы некорректные данные пользователя'));
+        return;
+      } if (err.code === 11000) {
+        next(new ConflictError('Пользователь с таким email уже зарегистрирован'));
         return;
       }
-      res.status(serverError).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
-const updateUserById = (req, res) => {
+const updateUserById = (req, res, next) => {
   const { name, about } = req.body;
   userModel.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
-    .orFail(new Error('NotValidId'))
+    .orFail()
     .then((user) => {
-      res.status(200).send(user);
+      res.status(200).send({ data: userData(user) });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(forBidden).send({ message: 'Переданы некорректные данные пользователя' });
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new BadRequestError('Переданы некорректные данные пользователя'));
         return;
-      } if (err.message === 'NotValidId') {
-        res.status(notFoundCode).send({ message: 'Пользователь не найден' });
+      } if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Пользователь не найден'));
         return;
       }
-      res.status(serverError).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
-const updateAvatarById = (req, res) => {
+const updateAvatarById = (req, res, next) => {
   const { avatar } = req.body;
   userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
-    .orFail(new Error('NotValidId'))
+    .orFail()
     .then((user) => {
-      res.status(200).send(user);
+      res.status(200).send({ data: userData(user) });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(forBidden).send({ message: ' Переданы некорректные данные пользователя' });
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new BadRequestError('Переданы некорректные данные пользователя'));
         return;
-      } if (err.message === 'NotValidId') {
-        res.status(notFoundCode).send({ message: 'Пользователь не найден' });
+      } if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Пользователь не найден'));
         return;
       }
-      res.status(serverError).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
+};
+
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    next(new BadRequestError('Email и password не могут быть пустыми'));
+    return;
+  }
+  userModel.findOne({ email }).select('+password')
+    .orFail()
+    .then((user) => {
+      bcrypt.compare(password, user.password)
+        .then((isValid) => {
+          if (!isValid) {
+            next(new UnauthorizedError('Неверный логин или пароль'));
+            return;
+          }
+          const payload = { _id: user._id };
+          const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+          res.cookie('token', token, { httpOnly: true }).status(200).send({ message: 'Авторизация прошла успешно' });
+        });
+    })
+    .catch((err) => {
+      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new UnauthorizedError('Неверный логин или пароль'));
+        return;
+      }
+      next(err);
+    });
+};
+
+const getCurrentUser = (req, res, next) => {
+  userModel.findById(req.user._id)
+    .then((user) => {
+      if (user) {
+        res.status(200).send({ data: userData(user) });
+      }
+    })
+    .catch(next);
 };
 
 module.exports = {
@@ -90,4 +142,6 @@ module.exports = {
   createUser,
   updateUserById,
   updateAvatarById,
+  login,
+  getCurrentUser,
 };
